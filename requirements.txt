@@ -1,0 +1,6 @@
+numpy==1.25.1
+numpy-stl==3.0.1
+pygame==2.5.0
+python-utils==3.7.0
+typing_extensions==4.7.1
+pytest
