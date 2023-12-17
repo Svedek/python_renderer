@@ -66,23 +66,23 @@ class Transform:
         self.y_rot = y
         self.z_rot = z
 
-    def inverse_matrix(self, interpolation=0.0):
+    def inverse_matrix(self, interpolation):  # =0.0):
         ret = np.identity(4, dtype=float)
         tf_mat = self.transformation_matrix(interpolation)
         ret[:3, :3] = tf_mat[:3, :3].T
         ret[:3, 3] = np.matmul(ret[:3, :3] * -1, tf_mat[:3, 3])
         return ret
 
-    def apply_to_point(self, p, interpolation=0.0):
+    def apply_to_point(self, p, interpolation):  # =0.0):
         tf_mat = self.transformation_matrix(interpolation)
         ret = (np.matmul(tf_mat[:3, :3], np.atleast_2d(np.array(p)).T)).T
         return (ret + np.atleast_2d(tf_mat[:3, 3])).flatten()
 
-    def apply_inverse_to_point(self, p, interpolation=0.0):
+    def apply_inverse_to_point(self, p, interpolation):  # =0.0):
         ret = (np.atleast_2d(np.array(p)).T - np.atleast_2d(self.transformation_matrix(interpolation)[:3, 3]).T)
-        return np.matmul(self.inverse_matrix()[:3, :3], ret).flatten()
+        return np.matmul(self.inverse_matrix(interpolation)[:3, :3], ret).flatten()
 
-    def apply_to_normal(self, n, interpolation=0.0):
+    def apply_to_normal(self, n, interpolation):  # =0.0):
         return np.matmul(self.transformation_matrix(interpolation)[:3, :3], np.array(n).T)
 
 

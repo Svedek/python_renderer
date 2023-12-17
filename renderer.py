@@ -10,27 +10,28 @@ class Renderer:
         self.meshs = meshs
         self.light = light
 
-    def render(self, shading: str, bg_color, ambient_light):
+    def render(self, shading: str, bg_color, ambient_light, time):
         shade = shading.lower()
         if shade == "none":
-            self.screen.draw(self.no_shading(bg_color))
+            self.screen.draw(self.no_shading(bg_color, time))
         elif shade == "flat":
-            self.screen.draw(self.flat_shading(bg_color, ambient_light))
+            self.screen.draw(self.flat_shading(bg_color, ambient_light, time))
         elif shade == "barycentric":
-            self.screen.draw(self.barycentric_shading(bg_color, ambient_light))
+            self.screen.draw(self.barycentric_shading(bg_color, ambient_light, time))
         elif shade == "depth":
-            self.screen.draw(self.depth_shading(bg_color, ambient_light))
+            self.screen.draw(self.depth_shading(bg_color, ambient_light, time))
         elif shade == "phong-blinn":
-            self.screen.draw(self.phong_shading(bg_color, ambient_light))
+            self.screen.draw(self.phong_shading(bg_color, ambient_light, time))
 
-    def no_shading(self, bg_color):
+    def no_shading(self, bg_color, time):
+        self.camera.set_time(time)
         render = np.full((self.screen.width, self.screen.height, 3), bg_color)
         for mesh in self.meshs:
             for face in mesh.faces:
                 verts = np.array(
-                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]])),
-                    self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]])),
-                    self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]]))]
+                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]], time))]
                 )
                 low = np.array(verts[0])
                 high = np.array(verts[0])
@@ -41,6 +42,14 @@ class Renderer:
 
                 dis_low = _screen_to_display(low, self.screen.width, self.screen.height)
                 dis_high = _screen_to_display(high, self.screen.width, self.screen.height)
+                dis_low[0] = max(0, dis_low[0])
+                dis_low[2] = max(0, dis_low[2])
+                dis_low[0] = min(self.screen.width-1, dis_low[0])
+                dis_low[2] = min(self.screen.height-1, dis_low[2])
+                dis_high[0] = max(0, dis_high[0])
+                dis_high[2] = max(0, dis_high[2])
+                dis_high[0] = min(self.screen.width-1, dis_high[0])
+                dis_high[2] = min(self.screen.height-1, dis_high[2])
 
                 # Iterate through displayed pixels
                 for i in range(dis_high[0] - dis_low[0] + 1):
@@ -56,27 +65,29 @@ class Renderer:
                         if _bary_in_range(bc[0], bc[1], bc[2]):
                             render[p[0], p[1]] = [0,0,0]
                 # If going for performance, remove following line, else this is more fun to watch
-                self.screen.draw(render)
+                # self.screen.draw(render)
         return render
 
-    def flat_shading(self, bg_color, ambient_light):
+    def flat_shading(self, bg_color, ambient_light, time):
+        self.camera.set_time(time)
+
         # Static color components
-        light_world_pos = self.light.transform.apply_to_point(np.array([0.0, 0.0, 0.0]))
-        camera_world_pos = self.camera.transform.apply_to_point(np.array([0.0, 0.0, 0.0]))
+        light_world_pos = self.light.transform.apply_to_point(np.array([0.0, 0.0, 0.0]), time)
+        camera_world_pos = self.camera.transform.apply_to_point(np.array([0.0, 0.0, 0.0]), time)
 
         render = np.full((self.screen.width, self.screen.height, 3), bg_color)
         z_buffer = np.full((self.screen.width, self.screen.height), 2.0)
         for mesh in self.meshs:
             for face, normal in zip(mesh.faces, mesh.normals):
-                normal = mesh.transform.apply_to_normal(_normalize(normal))
+                normal = mesh.transform.apply_to_normal(_normalize(normal), time)
                 # Normal culling
                 if np.dot(normal, self.camera.view_dir()) > 0:
                     continue
 
                 # Calculate Per-Face color
-                face_world_pos = mesh.transform.apply_to_point(mesh.verts[face[0]]) + \
-                                 mesh.transform.apply_to_point(mesh.verts[face[1]]) + \
-                                 mesh.transform.apply_to_point(mesh.verts[face[2]])
+                face_world_pos = mesh.transform.apply_to_point(mesh.verts[face[0]], time) + \
+                                 mesh.transform.apply_to_point(mesh.verts[face[1]], time) + \
+                                 mesh.transform.apply_to_point(mesh.verts[face[2]], time)
                 face_world_pos = face_world_pos / 3.0
                 l = (light_world_pos - face_world_pos).flatten()
                 v = (camera_world_pos - face_world_pos).flatten()
@@ -94,9 +105,9 @@ class Renderer:
 
                 # Get verts in screen space
                 verts = np.array(
-                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]]))]
+                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]], time))]
                 )
 
                 # Get the bounds of the face in screen space
@@ -110,8 +121,17 @@ class Renderer:
                 # Get the bounds in display space
                 dis_low = _screen_to_display(low, self.screen.width, self.screen.height)
                 dis_high = _screen_to_display(high, self.screen.width, self.screen.height)
+                dis_low[0] = max(0, dis_low[0])
+                dis_low[2] = max(0, dis_low[2])
+                dis_low[0] = min(self.screen.width-1, dis_low[0])
+                dis_low[2] = min(self.screen.height-1, dis_low[2])
+                dis_high[0] = max(0, dis_high[0])
+                dis_high[2] = max(0, dis_high[2])
+                dis_high[0] = min(self.screen.width-1, dis_high[0])
+                dis_high[2] = min(self.screen.height-1, dis_high[2])
 
                 # Iterate through displayed pixels
+                print(str(dis_high) + " ::: " + str(dis_low))
                 for i in range(dis_high[0] - dis_low[0] + 1):
                     for j in range(dis_high[2] - dis_low[2] + 1):
                         # Get barycentric coordinates: bc = [alpha, beta, gamma]
@@ -134,33 +154,35 @@ class Renderer:
                         # Add pixel to render buffer
                         render[p[0], p[1]] = color_int
                 # If going for performance, remove following line, else this is more fun to watch
-                self.screen.draw(render)
+                # self.screen.draw(render)
         return render
 
-    def phong_shading(self, bg_color, ambient_light):  # TODO wubba wubba
+    def phong_shading(self, bg_color, ambient_light, time):
+        self.camera.set_time(time)
+
         # Static color components
-        light_world_pos = self.light.transform.apply_to_point(np.array([0.0, 0.0, 0.0]))
-        camera_world_pos = self.camera.transform.apply_to_point(np.array([0.0, 0.0, 0.0]))
+        light_world_pos = self.light.transform.apply_to_point(np.array([0.0, 0.0, 0.0]), time)
+        camera_world_pos = self.camera.transform.apply_to_point(np.array([0.0, 0.0, 0.0]), time)
 
         render = np.full((self.screen.width, self.screen.height, 3), bg_color)
         z_buffer = np.full((self.screen.width, self.screen.height), 2.0)
         for mesh in self.meshs:
             for face, normal in zip(mesh.faces, mesh.normals):
-                normal = mesh.transform.apply_to_normal(_normalize(normal))
+                normal = mesh.transform.apply_to_normal(_normalize(normal), time)
                 # Normal culling
                 if np.dot(normal, self.camera.view_dir()) > 0:
                     continue
 
                 # Get verts in screen space
                 verts = np.array(
-                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]]))]
+                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]], time))]
                 )
                 vert_normals = np.array(
-                    [mesh.transform.apply_to_normal(mesh.vertex_normals[face[0]]),
-                     mesh.transform.apply_to_normal(mesh.vertex_normals[face[1]]),
-                     mesh.transform.apply_to_normal(mesh.vertex_normals[face[2]])]
+                    [mesh.transform.apply_to_normal(mesh.vertex_normals[face[0]], time),
+                     mesh.transform.apply_to_normal(mesh.vertex_normals[face[1]], time),
+                     mesh.transform.apply_to_normal(mesh.vertex_normals[face[2]], time)]
                 )
 
                 # Get the bounds of the face in screen space
@@ -174,6 +196,14 @@ class Renderer:
                 # Get the bounds in display space
                 dis_low = _screen_to_display(low, self.screen.width, self.screen.height)
                 dis_high = _screen_to_display(high, self.screen.width, self.screen.height)
+                dis_low[0] = max(0, dis_low[0])
+                dis_low[2] = max(0, dis_low[2])
+                dis_low[0] = min(self.screen.width-1, dis_low[0])
+                dis_low[2] = min(self.screen.height-1, dis_low[2])
+                dis_high[0] = max(0, dis_high[0])
+                dis_high[2] = max(0, dis_high[2])
+                dis_high[0] = min(self.screen.width-1, dis_high[0])
+                dis_high[2] = min(self.screen.height-1, dis_high[2])
 
                 # Iterate through displayed pixels
                 for i in range(dis_high[0] - dis_low[0] + 1):
@@ -199,9 +229,9 @@ class Renderer:
                         point_normal = _normalize(bc[0] * vert_normals[0] + bc[1] * vert_normals[1] + bc[2] * vert_normals[2])
 
                         # Calculate Per-Face color
-                        point_world_pos = bc[0] * mesh.transform.apply_to_point(mesh.verts[face[0]]) + \
-                                          bc[1] * mesh.transform.apply_to_point(mesh.verts[face[1]]) + \
-                                          bc[2] * mesh.transform.apply_to_point(mesh.verts[face[2]])
+                        point_world_pos = bc[0] * mesh.transform.apply_to_point(mesh.verts[face[0]], time) + \
+                                          bc[1] * mesh.transform.apply_to_point(mesh.verts[face[1]], time) + \
+                                          bc[2] * mesh.transform.apply_to_point(mesh.verts[face[2]], time)
                         point_world_pos = point_world_pos.flatten()
                         l = (light_world_pos - point_world_pos).flatten()
                         v = (camera_world_pos - point_world_pos).flatten()
@@ -223,24 +253,26 @@ class Renderer:
                         # Add pixel to render buffer
                         render[p[0], p[1]] = color_int
                 # If going for performance, remove following line, else this is more fun to watch
-                self.screen.draw(render)
+                # self.screen.draw(render)
         return render
 
-    def barycentric_shading(self, bg_color, ambient_light):
+    def barycentric_shading(self, bg_color, ambient_light, time):
+        self.camera.set_time(time)
+
         render = np.full((self.screen.width, self.screen.height, 3), bg_color)
         z_buffer = np.full((self.screen.width, self.screen.height), 2.0)
         for mesh in self.meshs:
             for face, normal in zip(mesh.faces, mesh.normals):
-                normal = mesh.transform.apply_to_normal(_normalize(normal))
+                normal = mesh.transform.apply_to_normal(_normalize(normal), time)
                 # Normal culling
                 if np.dot(normal, self.camera.view_dir()) > 0:
                     continue
 
                 # Get verts in screen space
                 verts = np.array(
-                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]]))]
+                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]], time))]
                 )
 
                 # Get the bounds of the face in screen space
@@ -254,6 +286,14 @@ class Renderer:
                 # Get the bounds in display space
                 dis_low = _screen_to_display(low, self.screen.width, self.screen.height)
                 dis_high = _screen_to_display(high, self.screen.width, self.screen.height)
+                dis_low[0] = max(0, dis_low[0])
+                dis_low[2] = max(0, dis_low[2])
+                dis_low[0] = min(self.screen.width-1, dis_low[0])
+                dis_low[2] = min(self.screen.height-1, dis_low[2])
+                dis_high[0] = max(0, dis_high[0])
+                dis_high[2] = max(0, dis_high[2])
+                dis_high[0] = min(self.screen.width-1, dis_high[0])
+                dis_high[2] = min(self.screen.height-1, dis_high[2])
 
                 # Iterate through displayed pixels
                 for i in range(dis_high[0] - dis_low[0] + 1):
@@ -276,21 +316,22 @@ class Renderer:
                             # Add pixel to render buffer
                             render[p[0], p[1]] = [int(bc[0] * 255), int(bc[1] * 255), int(bc[2] * 255)]
                 # If going for performance, remove following line, else this is more fun to watch
-                self.screen.draw(render)
+                # self.screen.draw(render)
         return render
 
-    def depth_shading(self, bg_color, ambient_light):
+    def depth_shading(self, bg_color, ambient_light, time):
+        self.camera.set_time(time)
+
         # Get shading scale
         depth = np.array([1.0,-1.0])
         for mesh in self.meshs:
             for face in mesh.faces:
                 verts = np.array(
-                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]]))]
+                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]], time))]
                 )
                 for vert in verts:
-                    print(vert)
                     depth[0] = min(depth[0], vert[1])
                     depth[1] = max(depth[1], vert[1])
         delta_depth = depth[1] - depth[0]
@@ -299,16 +340,16 @@ class Renderer:
         z_buffer = np.full((self.screen.width, self.screen.height), 2.0)
         for mesh in self.meshs:
             for face, normal in zip(mesh.faces, mesh.normals):
-                normal = mesh.transform.apply_to_normal(_normalize(normal))
+                normal = mesh.transform.apply_to_normal(_normalize(normal), time)
                 # Normal culling
                 if np.dot(normal, self.camera.view_dir()) > 0:
                     continue
 
                 # Get verts in screen space
                 verts = np.array(
-                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]])),
-                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]]))]
+                    [self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[0]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[1]], time)),
+                     self.camera.project_point(mesh.transform.apply_to_point(mesh.verts[face[2]], time))]
                 )
 
                 # Get the bounds of the face in screen space
@@ -322,6 +363,14 @@ class Renderer:
                 # Get the bounds in display space
                 dis_low = _screen_to_display(low, self.screen.width, self.screen.height)
                 dis_high = _screen_to_display(high, self.screen.width, self.screen.height)
+                dis_low[0] = max(0, dis_low[0])
+                dis_low[2] = max(0, dis_low[2])
+                dis_low[0] = min(self.screen.width-1, dis_low[0])
+                dis_low[2] = min(self.screen.height-1, dis_low[2])
+                dis_high[0] = max(0, dis_high[0])
+                dis_high[2] = max(0, dis_high[2])
+                dis_high[0] = min(self.screen.width-1, dis_high[0])
+                dis_high[2] = min(self.screen.height-1, dis_high[2])
 
                 # Iterate through displayed pixels
                 for i in range(dis_high[0] - dis_low[0] + 1):
@@ -345,7 +394,7 @@ class Renderer:
                             col = int((py - depth[0]) / delta_depth * 255)
                             render[p[0], p[1]] = [col, col, col]
                 # If going for performance, remove following line, else this is more fun to watch
-                self.screen.draw(render)
+                # self.screen.draw(render)
         return render
 
 
