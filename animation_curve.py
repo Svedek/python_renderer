@@ -55,19 +55,16 @@ class Curve:
         # Get interpolation_value between current and next keyframe
         time_value -= self.curve[self.current_index][1]
         interpolation_value = time_value / (self.curve[self.current_index + 1][1] - self.curve[self.current_index][1])
-        print(interpolation_value)
         interpolation_value = CurveType.apply_curve(interpolation_value, self.curve[self.current_index][2], self.curve[self.current_index][3])
 
-        print(self.curve[self.current_index][2])
-        print(interpolation_value)
         return (1.0 - interpolation_value) * self.curve[self.current_index][0] + interpolation_value * self.curve[self.current_index + 1][0]
 
 
-# curve = Curve([[0.0, 0.0, CurveType.LINEAR, 2],
-#                [5.0, 1.0, CurveType.EXPONENTIAL, 2],
-#                [1.0, 3.0, CurveType.HOLD, 2],
-#                [9.0, 5.0, CurveType.ROOT, 2],
-#                [0.0, 7.0, CurveType.HOLD, 2]])
+# curve = Curve([[np.array([0.0, 0.0]), 0.0, CurveType.LINEAR, 2],
+#                [np.array([5.0, 1.0]), 1.0, CurveType.EXPONENTIAL, 2],
+#                [np.array([1.0, 3.0]), 3.0, CurveType.HOLD, 2],
+#                [np.array([9.0, 5.0]), 5.0, CurveType.ROOT, 2],
+#                [np.array([0.0, 7.0]), 7.0, CurveType.HOLD, 2]])
 #
 # print("0.0: " + str(curve.interpolate(0.0)))
 # print("0.6: " + str(curve.interpolate(0.6)))
