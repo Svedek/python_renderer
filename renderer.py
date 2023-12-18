@@ -12,16 +12,19 @@ class Renderer:
 
     def render(self, shading: str, bg_color, ambient_light, time):
         shade = shading.lower()
+        frame = None
         if shade == "none":
-            self.screen.draw(self.no_shading(bg_color, time))
+            frame = self.no_shading(bg_color, time)
         elif shade == "flat":
-            self.screen.draw(self.flat_shading(bg_color, ambient_light, time))
+            frame = self.flat_shading(bg_color, ambient_light, time)
         elif shade == "barycentric":
-            self.screen.draw(self.barycentric_shading(bg_color, ambient_light, time))
+            frame = self.barycentric_shading(bg_color, ambient_light, time)
         elif shade == "depth":
-            self.screen.draw(self.depth_shading(bg_color, ambient_light, time))
+            frame = self.depth_shading(bg_color, ambient_light, time)
         elif shade == "phong-blinn":
-            self.screen.draw(self.phong_shading(bg_color, ambient_light, time))
+            frame = self.phong_shading(bg_color, ambient_light, time)
+        self.screen.draw(frame)
+        return frame
 
     def no_shading(self, bg_color, time):
         self.camera.set_time(time)
