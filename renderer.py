@@ -134,7 +134,6 @@ class Renderer:
                 dis_high[2] = min(self.screen.height-1, dis_high[2])
 
                 # Iterate through displayed pixels
-                print(str(dis_high) + " ::: " + str(dis_low))
                 for i in range(dis_high[0] - dis_low[0] + 1):
                     for j in range(dis_high[2] - dis_low[2] + 1):
                         # Get barycentric coordinates: bc = [alpha, beta, gamma]
