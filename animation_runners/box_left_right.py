@@ -2,7 +2,7 @@ import numpy as np
 from screen import Screen
 from camera import PerspectiveCamera,OrthoCamera
 from mesh import Mesh
-from renderer import Renderer
+from renderer import Renderer, RenderAlgorithm
 from light import PointLight
 import animation_curve as curve
 import animation_runner as animate
@@ -29,6 +29,6 @@ if __name__ == '__main__':
     light.transform.set_position(0, -5, 5)
 
     renderer = Renderer(screen, camera, [mesh], light)
-    animate.run_animation(renderer, "phong-blinn", [80,80,80], [0.2, 0.2, 0.2], 4, 6)
+    animate.run_animation(renderer, RenderAlgorithm.PHONG, [80,80,80], [0.2, 0.2, 0.2], 4, 6)
 
     screen.show()

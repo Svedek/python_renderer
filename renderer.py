@@ -1,7 +1,14 @@
 import math
-
+from enum import Enum
 import numpy as np
 
+
+class RenderAlgorithm(Enum):
+    NONE = 0
+    FLAT = 1
+    PHONG = 2
+    BARYCENTRIC = 3
+    DEPTH = 4
 
 class Renderer:
     def __init__(self, screen, camera, meshs, light):
@@ -10,19 +17,18 @@ class Renderer:
         self.meshs = meshs
         self.light = light
 
-    def render(self, shading: str, bg_color, ambient_light, time):
-        shade = shading.lower()
+    def render(self, render_algorithm: RenderAlgorithm, bg_color, ambient_light, time):
         frame = None
-        if shade == "none":
+        if render_algorithm == RenderAlgorithm.NONE:
             frame = self.no_shading(bg_color, time)
-        elif shade == "flat":
+        elif render_algorithm == RenderAlgorithm.FLAT:
             frame = self.flat_shading(bg_color, ambient_light, time)
-        elif shade == "barycentric":
-            frame = self.barycentric_shading(bg_color, ambient_light, time)
-        elif shade == "depth":
-            frame = self.depth_shading(bg_color, ambient_light, time)
-        elif shade == "phong-blinn":
+        elif render_algorithm == RenderAlgorithm.PHONG:
             frame = self.phong_shading(bg_color, ambient_light, time)
+        elif render_algorithm == RenderAlgorithm.BARYCENTRIC:
+            frame = self.barycentric_shading(bg_color, ambient_light, time)
+        elif render_algorithm == RenderAlgorithm.DEPTH:
+            frame = self.depth_shading(bg_color, ambient_light, time)
         self.screen.draw(frame)
         return frame
 
