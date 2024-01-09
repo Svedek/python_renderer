@@ -45,7 +45,5 @@ class Screen:
 
         pygame.quit()
 
-    def screen_to_pixel(self):  # TODO
-        pass
-
-
+    def save_screen(self, file_path):
+        pygame.image.save(self.display, file_path)

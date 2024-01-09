@@ -1,53 +1,51 @@
+import os
+import glob
+import contextlib
+from PIL import Image
 
 
-def run_animation(renderer, shading: str, bg_color, ambient_light, fps, time):
+def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
     frames = int(fps * time)
+    imagelist = []
+    filenamelist = [0] * frames
+
+    path = "animations/"
+    print(os.path.exists(path))
+    if not os.path.exists(path):
+        os.mkdir(path)
+
     for i in range(frames):
         frame_time = i / fps
         print(str(i) + " " + str(frame_time))
-        renderer.render(shading, bg_color, ambient_light, frame_time)
+        frame = renderer.render(shading, bg_color, ambient_light, frame_time)
+
+        filenamelist[i] = path + "frame_" + f"{i:03}" + ".png"
+        renderer.screen.save_screen(filenamelist[i])
 
 
-import numpy as np
+    # filepaths
+    fp_in = path + "frame_*.png"
+    fp_out = path + "image.gif"
 
-from screen import Screen
-from camera import PerspectiveCamera,OrthoCamera
-from mesh import Mesh
-from renderer import Renderer
-from light import PointLight
-import animation_curve as curve
+    # use exit stack to automatically close opened images
+    with contextlib.ExitStack() as stack:
 
+        imgs = (stack.enter_context(Image.open(f))
+                for f in sorted(glob.glob(fp_in)))
 
+        img = next(imgs)
 
-if __name__ == '__main__':
-    screen = Screen(500,500)
+        img.save(fp=fp_out, format='GIF', append_images=imgs,
+                 save_all=True, duration=100, loop=0)
 
-    camera = PerspectiveCamera(-1.0, 1.0, -1.0, 1.0, 1.0, 10)
-    camera.transform.set_position(0, -2.5, 0)
+    os.remove("frame_*.png")
 
-    pos_curve = curve.Curve([[-2.0, 0.0, curve.CurveType.LINEAR, 2],
-                             [2.0, 1.0, curve.CurveType.LINEAR, 2],
-                             [-2.0, 3.0, curve.CurveType.EXPONENTIAL, 2],
-                             [2.0, 5.0, curve.CurveType.HOLD, 2]])
-
-
-    mesh = Mesh.from_stl("unit_cube.stl", np.array([1.0, 0.0, 1.0]),\
-        np.array([1.0, 1.0, 1.0]),0.05,1.0,0.5,1000)
-    mesh.transform.set_rotation(pos_curve, 0, 200)
-    mesh.transform.set_position(pos_curve, 0, 0)
-
-    light = PointLight(50.0, np.array([1, 1, 1]))
-    light.transform.set_position(0, -5, 5)
-
-    renderer = Renderer(screen, camera, [mesh], light)
-    run_animation(renderer, "phong-blinn", [80,80,80], [0.2, 0.2, 0.2], 4, 6)
-
-    screen.show()
 
 # Slight issue with normal culling?
 
-# "none" works
-# "flat" works
-# "barycentric" works
-# "depth" works
-# "phong-blinn" works
+# "none"
+# "flat"
+# "barycentric"
+# "depth"
+# "phong-blinn"
+
