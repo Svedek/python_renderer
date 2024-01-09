@@ -1,23 +1,27 @@
 import math
-
-import numpy as np
 from enum import Enum
 
 
 class CurveType(Enum):
     LINEAR = 0
-    EXPONENTIAL = 1
-    ROOT = 2
-    HOLD = 3
+    EXPONENTIAL = 1  # curve_value is exponent power
+    ROOT = 2  # curve_value is root power
+    SINE = 3  # curve_value is number of cycles
+    COSINE = 4  # curve_value is number of cycles
+    HOLD = 5
 
     @staticmethod
-    def apply_curve(value, curve_type, curve_power=2):
+    def apply_curve(value, curve_type, curve_value=2):
         if curve_type == CurveType.LINEAR:
             return CurveType._linear_interpolation(value)
         elif curve_type == CurveType.EXPONENTIAL:
-            return CurveType._exponential_interpolation(value, curve_power)
+            return CurveType._exponential_interpolation(value, curve_value)
         elif curve_type == CurveType.ROOT:
-            return CurveType._root_interpolation(value, curve_power)
+            return CurveType._root_interpolation(value, curve_value)
+        elif curve_type == CurveType.SINE:
+            return CurveType._sine_interpolation(value, curve_value)
+        elif curve_type == CurveType.COSINE:
+            return CurveType._cosine_interpolation(value, curve_value)
         elif curve_type == CurveType.HOLD:
             return CurveType._hold_interpolation(value)
 
@@ -32,6 +36,14 @@ class CurveType(Enum):
     @staticmethod
     def _root_interpolation(value, curve_power):
         return math.pow(value, 1/curve_power)
+
+    @staticmethod
+    def _sine_interpolation(value, cycles):
+        return (math.sin(2*math.pi*cycles*value) + 1) / 2
+
+    @staticmethod
+    def _cosine_interpolation(value, cycles):
+        return (math.cos(2*math.pi*cycles*value) + 1) / 2
 
     @staticmethod
     def _hold_interpolation(value):
@@ -76,3 +88,9 @@ class Curve:
 # print("6.0: " + str(curve.interpolate(6.0)))
 # print("7.0: " + str(curve.interpolate(7.0)))
 # print("8.0: " + str(curve.interpolate(8.0)))
+
+# for i in range(8 + 1):
+#     print(CurveType._cosine_interpolation(i/8, 1))
+#     print(CurveType.apply_curve(i/8, CurveType.COSINE, 1))
+#     print("===")
+
