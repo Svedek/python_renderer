@@ -70,27 +70,3 @@ class Curve:
         interpolation_value = CurveType.apply_curve(interpolation_value, self.curve[self.current_index][2], self.curve[self.current_index][3])
 
         return (1.0 - interpolation_value) * self.curve[self.current_index][0] + interpolation_value * self.curve[self.current_index + 1][0]
-
-
-# curve = Curve([[np.array([0.0, 0.0]), 0.0, CurveType.LINEAR, 2],
-#                [np.array([5.0, 1.0]), 1.0, CurveType.EXPONENTIAL, 2],
-#                [np.array([1.0, 3.0]), 3.0, CurveType.HOLD, 2],
-#                [np.array([9.0, 5.0]), 5.0, CurveType.ROOT, 2],
-#                [np.array([0.0, 7.0]), 7.0, CurveType.HOLD, 2]])
-#
-# print("0.0: " + str(curve.interpolate(0.0)))
-# print("0.6: " + str(curve.interpolate(0.6)))
-# print("1.0: " + str(curve.interpolate(1.0)))
-# print("2.0: " + str(curve.interpolate(2.0)))
-# print("3.0: " + str(curve.interpolate(3.0)))
-# print("4.0: " + str(curve.interpolate(4.0)))
-# print("5.0: " + str(curve.interpolate(5.0)))
-# print("6.0: " + str(curve.interpolate(6.0)))
-# print("7.0: " + str(curve.interpolate(7.0)))
-# print("8.0: " + str(curve.interpolate(8.0)))
-
-# for i in range(8 + 1):
-#     print(CurveType._cosine_interpolation(i/8, 1))
-#     print(CurveType.apply_curve(i/8, CurveType.COSINE, 1))
-#     print("===")
-

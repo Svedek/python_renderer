@@ -6,11 +6,9 @@ from PIL import Image
 
 def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
     frames = int(fps * time)
-    imagelist = []
     filenamelist = [0] * frames
 
     path = "animations/"
-    print(os.path.exists(path))
     if not os.path.exists(path):
         os.mkdir(path)
 
@@ -38,14 +36,5 @@ def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
         img.save(fp=fp_out, format='GIF', append_images=imgs,
                  save_all=True, duration=100, loop=0)
 
-    os.remove("frame_*.png")
-
-
-# Slight issue with normal culling?
-
-# "none"
-# "flat"
-# "barycentric"
-# "depth"
-# "phong-blinn"
-
+    for frame in filenamelist:
+        os.remove(frame)

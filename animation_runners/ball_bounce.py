@@ -44,6 +44,6 @@ if __name__ == '__main__':
     light.transform.set_position(0, -5, 5)
 
     renderer = Renderer(screen, camera, [mesh, plat1, plat2, plat3], light)
-    animate.run_animation(renderer, RenderAlgorithm.PHONG, [80,80,90], [0.4, 0.4, 0.4], 8, 5.5)
+    animate.run_animation(renderer, RenderAlgorithm.PHONG, [80,80,80], [0.4, 0.4, 0.4], 8, 5.5)
 
     screen.show()
