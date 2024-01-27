@@ -84,20 +84,3 @@ class Transform:
 
     def apply_to_normal(self, n, interpolation):  # =0.0):
         return np.matmul(self.transformation_matrix(interpolation)[:3, :3], np.array(n).T)
-
-
-# tf = Transform()
-# x_pos_curve = curve.Curve([[0.0, 0.0, curve.CurveType.LINEAR, 2],
-#                            [5.0, 1.0, curve.CurveType.LINEAR, 2],
-#                            [10.0, 3.0, curve.CurveType.HOLD, 2],
-#                            [15.0, 5.0, curve.CurveType.HOLD, 2]])
-# tf.set_position(x_pos_curve, 10.0, 15.0)
-# print(tf.apply_to_point(np.array([1,2,3]), 0.0))
-# print(tf.apply_to_point(np.array([1,2,3]), 0.5))
-# print(tf.apply_to_point(np.array([1,2,3]), 1.0))
-# print(tf.apply_to_point(np.array([1,2,3]), 1.5))
-# print(tf.apply_to_point(np.array([1,2,3]), 2.0))
-# print(tf.apply_to_point(np.array([1,2,3]), 2.5))
-# print(tf.apply_to_point(np.array([1,2,3]), 3.0))
-# print(tf.apply_to_point(np.array([1,2,3]), 4.0))
-# print(tf.apply_to_point(np.array([1,2,3]), 5.0))

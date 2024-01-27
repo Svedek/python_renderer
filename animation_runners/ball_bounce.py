@@ -1,10 +1,10 @@
 import numpy as np
 from screen import Screen
-from camera import PerspectiveCamera,OrthoCamera
-from mesh import Mesh
-from renderer import Renderer, RenderAlgorithm
+from camera import PerspectiveCamera, OrthoCamera
 from light import PointLight
+from mesh import Mesh
 import animation_curve as curve
+from renderer import Renderer, RenderAlgorithm
 import animation_runner as animate
 
 
@@ -14,8 +14,7 @@ if __name__ == '__main__':
     camera = PerspectiveCamera(-1.0, 1.0, -1.0, 1.0, 1.0, 10)
     camera.transform.set_position(0, -2.5, 1)
 
-    mesh = Mesh.from_stl("../unit_sphere.stl", np.array([1.0, 0.0, 1.0]),\
-        np.array([1.0, 1.0, 1.0]),0.05,1.0,0.5,1000)
+    mesh = Mesh.from_stl("../unit_sphere.stl", [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], 0.05, 1.0, 0.5, 1000)
     x_curve = curve.Curve([[-5.0, 0.0, curve.CurveType.LINEAR, 2], #Bounce at (-3,3) (0,1) (3,-1)
                            [6.0, 5.5, curve.CurveType.HOLD, 2]])
     z_curve = curve.Curve([[7.5, 0.0, curve.CurveType.EXPONENTIAL, 3],

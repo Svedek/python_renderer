@@ -14,7 +14,7 @@ def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
 
     for i in range(frames):
         frame_time = i / fps
-        print(str(i) + " " + str(frame_time))
+        print("Frame: " + str(i) + " at time: " + str(frame_time))
         frame = renderer.render(shading, bg_color, ambient_light, frame_time)
 
         filenamelist[i] = path + "frame_" + f"{i:03}" + ".png"
