@@ -12,8 +12,8 @@ class Mesh:
         self.faces = []
         self.normals = np.array([])
         self.bounds = np.array([])
-        self.diffuse_color = diffuse_color
-        self.specular_color = specular_color
+        self.diffuse_color = np.array(diffuse_color)
+        self.specular_color = np.array(specular_color)
         self.ka = ka
         self.kd = kd
         self.ks = ks

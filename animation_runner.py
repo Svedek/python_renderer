@@ -14,7 +14,7 @@ def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
 
     for i in range(frames):
         frame_time = i / fps
-        print(str(i) + " " + str(frame_time))
+        print("Frame: " + str(i) + " at time: " + str(frame_time))
         frame = renderer.render(shading, bg_color, ambient_light, frame_time)
 
         filenamelist[i] = path + "frame_" + f"{i:03}" + ".png"
@@ -25,6 +25,8 @@ def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
     fp_in = path + "frame_*.png"
     fp_out = path + "image.gif"
 
+    dur = max(int(1000/fps), 1)
+
     # use exit stack to automatically close opened images
     with contextlib.ExitStack() as stack:
 
@@ -34,7 +36,7 @@ def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
         img = next(imgs)
 
         img.save(fp=fp_out, format='GIF', append_images=imgs,
-                 save_all=True, duration=100, loop=0)
+                 save_all=True, duration=dur, loop=0)
 
     for frame in filenamelist:
         os.remove(frame)
