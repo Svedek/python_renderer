@@ -40,3 +40,5 @@ def run_animation(renderer, shading, bg_color, ambient_light, fps, time):
 
     for frame in filenamelist:
         os.remove(frame)
+
+    print("\nAnimation saved to: " + os.getcwd() + "\\" + fp_out.replace("/", "\\"))
